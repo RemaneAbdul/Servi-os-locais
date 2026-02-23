@@ -1,48 +1,94 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
-
+import { ScrollView, Text, View, Pressable, TextInput, FlatList } from "react-native";
+import { useState } from "react";
+import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 
-/**
- * Home Screen - NativeWind Example
- *
- * This template uses NativeWind (Tailwind CSS for React Native).
- * You can use familiar Tailwind classes directly in className props.
- *
- * Key patterns:
- * - Use `className` instead of `style` for most styling
- * - Theme colors: use tokens directly (bg-background, text-foreground, bg-primary, etc.); no dark: prefix needed
- * - Responsive: standard Tailwind breakpoints work on web
- * - Custom colors defined in tailwind.config.js
- */
+const CATEGORIES = [
+  { id: "1", name: "Eletricista", icon: "⚡" },
+  { id: "2", name: "Pedreiro", icon: "🧱" },
+  { id: "3", name: "Canalizador", icon: "🔧" },
+  { id: "4", name: "Pintor", icon: "🎨" },
+  { id: "5", name: "Mecânico", icon: "🔩" },
+  { id: "6", name: "Técnico de Frio", icon: "❄️" },
+  { id: "7", name: "Outros", icon: "⋯" },
+];
+
 export default function HomeScreen() {
+  const router = useRouter();
+  const [searchText, setSearchText] = useState("");
+
+  const filteredCategories = CATEGORIES.filter((cat) =>
+    cat.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const handleCategoryPress = (categoryName: string) => {
+    router.push({
+      pathname: "/professionals" as any,
+      params: { category: categoryName },
+    });
+  };
+
+  const renderCategoryCard = ({ item }: { item: (typeof CATEGORIES)[0] }) => (
+    <Pressable
+      onPress={() => handleCategoryPress(item.name)}
+      style={({ pressed }) => [
+        {
+          flex: 1,
+          marginHorizontal: 6,
+          marginVertical: 6,
+          paddingVertical: 20,
+          paddingHorizontal: 12,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: "#CCCCCC",
+          backgroundColor: pressed ? "#f5f5f5" : "#ffffff",
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: pressed ? 0.8 : 1,
+        },
+      ]}
+    >
+      <Text style={{ fontSize: 32, marginBottom: 8 }}>{item.icon}</Text>
+      <Text className="text-center font-semibold text-foreground text-sm">{item.name}</Text>
+    </Pressable>
+  );
+
   return (
-    <ScreenContainer className="p-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 gap-8">
-          {/* Hero Section */}
-          <View className="items-center gap-2">
-            <Text className="text-4xl font-bold text-foreground">Welcome</Text>
-            <Text className="text-base text-muted text-center">
-              Edit app/(tabs)/index.tsx to get started
-            </Text>
-          </View>
+    <ScreenContainer className="p-4">
+      {/* Search Bar */}
+      <View className="mb-6">
+        <TextInput
+          placeholder="🔍 Pesquisar categoria..."
+          placeholderTextColor="#999999"
+          value={searchText}
+          onChangeText={setSearchText}
+          style={{
+            borderWidth: 1,
+            borderColor: "#CCCCCC",
+            borderRadius: 8,
+            paddingVertical: 12,
+            paddingHorizontal: 12,
+            fontSize: 14,
+            color: "#000000",
+          }}
+        />
+      </View>
 
-          {/* Example Card */}
-          <View className="w-full max-w-sm self-center bg-surface rounded-2xl p-6 shadow-sm border border-border">
-            <Text className="text-lg font-semibold text-foreground mb-2">NativeWind Ready</Text>
-            <Text className="text-sm text-muted leading-relaxed">
-              Use Tailwind CSS classes directly in your React Native components.
-            </Text>
-          </View>
+      {/* Categories Grid */}
+      <FlatList
+        data={filteredCategories}
+        renderItem={renderCategoryCard}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        scrollEnabled={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
 
-          {/* Example Button */}
-          <View className="items-center">
-            <TouchableOpacity className="bg-primary px-6 py-3 rounded-full active:opacity-80">
-              <Text className="text-background font-semibold">Get Started</Text>
-            </TouchableOpacity>
-          </View>
+      {filteredCategories.length === 0 && (
+        <View className="items-center justify-center py-12">
+          <Text className="text-muted text-base">Nenhuma categoria encontrada</Text>
         </View>
-      </ScrollView>
+      )}
     </ScreenContainer>
   );
 }

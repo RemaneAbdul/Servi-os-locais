@@ -35,6 +35,20 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Perfil",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="chevron.right" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="logout"
+        options={{
+          title: "Sair",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="chevron.left.forwardslash.chevron.right" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
