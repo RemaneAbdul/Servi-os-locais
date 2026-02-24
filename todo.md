@@ -39,5 +39,22 @@
 ## Fase 6: Entrega
 - [ ] Revisar todas as telas
 - [ ] Testar em iOS e Android
-- [ ] Criar checkpoint final
-- [ ] Preparar documentação para o utilizador
+- [x] Criar checkpoint final
+- [x] Preparar documentação para o utilizador
+
+
+## Fase 5: Design de Alta Fidelidade (Material Design, Azul/Branco)
+- [x] Atualizar tema com cores azul/branco e Material Design
+- [x] Redesenhar Login/Registo com alta fidelidade
+- [x] Implementar Home com mapa e geolocalização
+- [x] Criar tela de Lista de Profissionais com cards modernos
+- [x] Desenvolver Perfil do Profissional com design premium
+- [x] Implementar Chat em tempo real estilo WhatsApp
+- [x] Criar tela de Editar Perfil com formulário moderno
+- [x] Desenvolver tela de Avaliações com estrelas
+- [x] Criar Histórico de Pedidos
+- [x] Implementar Notificações
+- [x] Adicionar pins no mapa com distância
+- [x] Integrar geolocalização com expo-location
+- [x] Testar todos os fluxos de navegação
+- [x] Validar UX em dispositivos móveis

@@ -85,8 +85,16 @@ export default function RootLayout() {
           {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
-          <Stack screenOptions={{ headerShown: false }} initialRouteName="login">
+          <Stack screenOptions={{ headerShown: false }} initialRouteName="login-hifi">
             <Stack.Screen name="login" />
+            <Stack.Screen name="login-hifi" />
+            <Stack.Screen name="home-map-hifi" />
+            <Stack.Screen name="professional-detail-hifi" />
+            <Stack.Screen name="chat-hifi" />
+            <Stack.Screen name="history-hifi" />
+            <Stack.Screen name="profile-edit-hifi" />
+            <Stack.Screen name="reviews-hifi" />
+            <Stack.Screen name="notifications-hifi" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="professionals" />
             <Stack.Screen name="professional-detail" />
