@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm exec expo export --platform web",
+  "buildCommand": "pnpm run build:web",
   "outputDirectory": "dist",
   "framework": null,
   "functions": {
