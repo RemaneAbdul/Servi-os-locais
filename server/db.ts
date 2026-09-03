@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -16,12 +16,10 @@ export async function getDb() {
     }
   }
 
-  // Keep existing installations compatible with the new authentication fields.
-  // This is intentionally additive: no users or existing data are removed.
   if (_db && !_authColumnsReady) {
     try {
-      await _db.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS userType ENUM('client','professional') NOT NULL DEFAULT 'client'");
-      await _db.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS passwordHash TEXT NULL");
+      await _db.execute(sql.raw("ALTER TABLE users ADD COLUMN IF NOT EXISTS userType ENUM('client','professional') NOT NULL DEFAULT 'client'"));
+      await _db.execute(sql.raw("ALTER TABLE users ADD COLUMN IF NOT EXISTS passwordHash TEXT NULL"));
       _authColumnsReady = true;
     } catch (error) {
       console.error("[Database] Failed to prepare authentication columns:", error);
@@ -34,7 +32,6 @@ export async function getDb() {
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
-
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot upsert user: database not available");
@@ -44,7 +41,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   try {
     const values: InsertUser = { openId: user.openId };
     const updateSet: Record<string, unknown> = {};
-
     const nullableFields = ["name", "email", "loginMethod", "passwordHash"] as const;
     type NullableField = (typeof nullableFields)[number];
 
@@ -55,7 +51,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
         updateSet[field] = value;
       }
     }
-
     if (user.userType !== undefined) {
       values.userType = user.userType;
       updateSet.userType = user.userType;
