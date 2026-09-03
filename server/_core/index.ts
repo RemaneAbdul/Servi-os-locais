@@ -7,6 +7,8 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerPasswordAuthRoutes } from "./password-auth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { getDb } from "../db";
+import { ENV } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -26,18 +28,15 @@ async function findAvailablePort(startPort = 3000): Promise<number> {
 /** Creates the Express application without opening a listening socket. */
 export function createApp(): Express {
   const app = express();
-
   app.set("trust proxy", 1);
 
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     if (origin) res.header("Access-Control-Allow-Origin", origin);
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-    );
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Vary", "Origin");
     if (req.method === "OPTIONS") {
       res.sendStatus(204);
       return;
@@ -51,15 +50,40 @@ export function createApp(): Express {
   registerPasswordAuthRoutes(app);
   registerOAuthRoutes(app);
 
-  app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, timestamp: Date.now() });
+  app.get("/api/health", async (_req, res) => {
+    try {
+      const db = await getDb();
+      if (!db) {
+        res.status(503).json({
+          ok: false,
+          database: false,
+          authentication: Boolean(ENV.cookieSecret),
+          error: "DATABASE_URL não está configurada.",
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      res.json({
+        ok: true,
+        database: true,
+        authentication: Boolean(ENV.cookieSecret),
+        oauth: Boolean(ENV.oAuthServerUrl && ENV.appId),
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      console.error("[Health] Database check failed:", error);
+      res.status(503).json({
+        ok: false,
+        database: false,
+        authentication: Boolean(ENV.cookieSecret),
+        error: "Banco de dados indisponível.",
+        timestamp: Date.now(),
+      });
+    }
   });
 
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({ router: appRouter, createContext }),
-  );
-
+  app.use("/api/trpc", createExpressMiddleware({ router: appRouter, createContext }));
   return app;
 }
 
@@ -69,9 +93,7 @@ async function startServer() {
   const server = createServer(app);
   const preferredPort = parseInt(process.env.PORT || "3000", 10);
   const port = await findAvailablePort(preferredPort);
-  if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
-  }
+  if (port !== preferredPort) console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   server.listen(port, () => console.log(`[api] server listening on port ${port}`));
 }
 
