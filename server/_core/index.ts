@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express from "express";
+import express, { type Express } from "express";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -23,18 +23,23 @@ async function findAvailablePort(startPort = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-async function startServer() {
+/** Creates the Express application without opening a listening socket. */
+export function createApp(): Express {
   const app = express();
-  const server = createServer(app);
+
+  app.set("trust proxy", 1);
 
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     if (origin) res.header("Access-Control-Allow-Origin", origin);
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+    );
     res.header("Access-Control-Allow-Credentials", "true");
     if (req.method === "OPTIONS") {
-      res.sendStatus(200);
+      res.sendStatus(204);
       return;
     }
     next();
@@ -43,7 +48,6 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // Local email/password authentication must be registered before the generic OAuth routes.
   registerPasswordAuthRoutes(app);
   registerOAuthRoutes(app);
 
@@ -56,11 +60,24 @@ async function startServer() {
     createExpressMiddleware({ router: appRouter, createContext }),
   );
 
-  const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
-  if (port !== preferredPort) console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+  return app;
+}
 
+/** Local development entry point. Vercel imports createApp() instead. */
+async function startServer() {
+  const app = createApp();
+  const server = createServer(app);
+  const preferredPort = parseInt(process.env.PORT || "3000", 10);
+  const port = await findAvailablePort(preferredPort);
+  if (port !== preferredPort) {
+    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+  }
   server.listen(port, () => console.log(`[api] server listening on port ${port}`));
 }
 
-startServer().catch(console.error);
+if (process.env.VERCEL !== "1") {
+  startServer().catch((error) => {
+    console.error("[api] failed to start server:", error);
+    process.exitCode = 1;
+  });
+}
